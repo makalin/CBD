@@ -13,6 +13,8 @@ CompactBinaryData (CBD) is a lightweight, binary serialization format designed a
 - **Extensible**: Reserves bits for future data types and custom extensions.
 - **Debugging Mode**: Optional human-readable text output for easier debugging and data inspection.
 - **No External Compression**: Achieves compactness natively, reducing processing overhead compared to compressed JSON.
+- **Format Conversion**: Built-in utilities for converting between CBD and other formats (JSON, MessagePack, BSON, orjson, ujson).
+- **Comprehensive Benchmarks**: Detailed performance and size comparisons with other serialization formats.
 
 ## Why CBD?
 
@@ -30,13 +32,13 @@ For example, a JSON object like `{"name":"John","age":30,"name":"Jane","age":25}
 # Clone the repository
 git clone https://github.com/makalin/CBD.git
 
-# Install dependencies (example for Python implementation)
-pip install cbd-serializer
+# Install dependencies
+pip install -r requirements.txt
 ```
 
 ## Usage
 
-### Python Example
+### Basic Usage
 
 ```python
 from cbd import CBD
@@ -54,53 +56,73 @@ binary_data = CBD.serialize(data)
 
 # Deserialize from CBD
 original_data = CBD.deserialize(binary_data)
-
-print(original_data)  # Output: {'name': 'John', 'age': 30, 'scores': [95, 87, 92], 'active': True}
 ```
 
-### JavaScript Example
+### Format Conversion
 
-```javascript
-const CBD = require('cbd-serializer');
+CBD provides utilities for converting between different serialization formats:
 
-// Create a sample data structure
-const data = {
-  name: "John",
-  age: 30,
-  scores: [95, 87, 92],
-  active: true
-};
+```python
+from cbd.utils import FormatConverter
 
-// Serialize to CBD
-const binaryData = CBD.serialize(data);
+# Convert JSON to CBD
+json_data = '{"name": "John", "age": 30}'
+cbd_data = FormatConverter.json_to_cbd(json_data)
 
-// Deserialize from CBD
-const originalData = CBD.deserialize(binaryData);
+# Convert CBD to MessagePack
+msgpack_data = FormatConverter.cbd_to_msgpack(cbd_data)
 
-console.log(originalData); // Output: { name: 'John', age: 30, scores: [95, 87, 92], active: true }
+# Compare format sizes
+results = FormatConverter.compare_formats(data)
+for format_name, size in results.items():
+    print(f"{format_name}: {size} bytes")
 ```
+
+### Command-line Format Conversion
+
+```bash
+# Convert JSON file to CBD
+python -m cbd.utils.format_converter input.json output.cbd -i json -o cbd
+
+# Convert CBD file to MessagePack
+python -m cbd.utils.format_converter input.cbd output.msgpack -i cbd -o msgpack
+```
+
+## Benchmark Suite
+
+The project includes a comprehensive benchmark suite for comparing CBD with other serialization formats:
+
+```bash
+# Run all benchmarks
+python tests/run_benchmarks.py
+
+# Run specific benchmark tests
+pytest tests/benchmarks/benchmark_serialization.py -v --benchmark-only
+```
+
+The benchmark suite measures:
+- Serialization time
+- Deserialization time
+- Serialized data size
+- Memory usage
+
+Results are saved in:
+- `benchmark_results.json`: Raw benchmark data
+- `tests/plots/serialization_times.png`: Comparison of serialization times
+- `tests/plots/data_sizes.png`: Comparison of serialized data sizes
 
 ## Format Specification
 
-### Header
-- **Magic Number** (2 bytes): Identifies CBD files (`0xCBD1`).
-- **Version** (1 byte): Format version (`0x01` for v0.1.0).
-- **Dictionary Size** (2 bytes): Number of entries in the key dictionary.
+For a detailed description of the CBD binary format, including the header structure, type system, and encoding schemes, please refer to the [Format Specification](docs/format_specification.md).
 
-### Dictionary
-- Array of strings (UTF-8 encoded) with 1-byte or 2-byte IDs, used to replace repetitive keys in the data.
+### Quick Reference
 
-### Data
-- **Type Encoding**: 3-bit type field (null, boolean, number, string, array, object).
-- **Numbers**: Variable-length encoding (varint for integers, custom 4-byte or 8-byte for floats).
-- **Strings**: Length-prefixed UTF-8 strings.
-- **Containers**: Bit flag to indicate array or object, followed by length and contents.
+The CBD format consists of three main sections:
+1. **Header** (5 bytes): Magic number, version, and dictionary size
+2. **Dictionary**: UTF-8 encoded strings for key compression
+3. **Data**: Serialized data using a 3-bit type system and variable-length encoding
 
-### Example Binary Structure
-For `{"name":"John","age":30}`:
-- Header: `0xCBD1 0x01 0x0002` (2 dictionary entries).
-- Dictionary: `["name", "age"]` encoded as length-prefixed strings.
-- Data: Object start, key ID 1 ("name"), string "John", key ID 2 ("age"), varint 30.
+See the [Format Specification](docs/format_specification.md) for complete details and examples.
 
 ## Benchmarks
 
@@ -109,7 +131,7 @@ Preliminary benchmarks show CBD is:
 - **20-30% faster** to parse than gzipped JSON due to no decompression overhead.
 - **Comparable in size** to MessagePack for mixed data but simpler to implement.
 
-Detailed benchmarks will be added as the project matures.
+Detailed benchmarks are available in the `tests/benchmarks` directory.
 
 ## Roadmap
 
@@ -118,6 +140,8 @@ Detailed benchmarks will be added as the project matures.
 - [ ] Provide tools for converting JSON to CBD and vice versa.
 - [ ] Optimize for streaming data applications.
 - [ ] Add validation and schema support.
+- [ ] Add more format conversion utilities.
+- [ ] Enhance benchmark suite with more test cases.
 
 ## Contributing
 
