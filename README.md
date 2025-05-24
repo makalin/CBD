@@ -129,7 +129,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Contact
 
-For questions or feedback, open an issue on GitHub or reach out via [email@example.com](mailto:email@example.com).
+For questions or feedback, open an issue on GitHub or reach out via [makalin@gmail.com](mailto:makalin@gmail.com).
 
 ---
 
